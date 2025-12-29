@@ -10,7 +10,7 @@
 body{
   margin:0;
   font-family:'Segoe UI',sans-serif;
-  background: linear-gradient(180deg,#0f2027,#203a43,#2c5364);
+  background: linear-gradient(180deg,#1c1f26,#283048,#3a6073);
   color:#fff;
 }
 
@@ -21,7 +21,7 @@ header{
 
 h1{
   margin:0;
-  font-size:30px;
+  font-size:32px;
 }
 
 .subtitle{
@@ -30,19 +30,19 @@ h1{
 }
 
 .card{
-  max-width:900px;
-  margin:0 auto;
+  max-width:1000px;
+  margin:0 auto 40px;
   background:rgba(0,0,0,0.35);
-  backdrop-filter:blur(8px);
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.4);
+  backdrop-filter:blur(10px);
+  border-radius:25px;
+  padding:25px;
+  box-shadow:0 25px 50px rgba(0,0,0,0.5);
 }
 
 #map{
   height:60vh;
-  border-radius:15px;
-  margin-top:15px;
+  border-radius:20px;
+  margin-top:20px;
 }
 
 .controls{
@@ -51,7 +51,7 @@ h1{
 }
 
 button{
-  padding:15px 35px;
+  padding:15px 40px;
   font-size:17px;
   font-weight:bold;
   border:none;
@@ -77,9 +77,17 @@ button{
 
 #mensaje{
   text-align:center;
-  font-size:18px;
+  font-size:19px;
   margin-top:15px;
   min-height:30px;
+}
+
+#stats{
+  margin-top:25px;
+  padding-top:15px;
+  border-top:1px solid rgba(255,255,255,0.2);
+  text-align:center;
+  font-size:16px;
 }
 </style>
 </head>
@@ -94,6 +102,7 @@ button{
 </header>
 
 <div class="card">
+
   <div class="controls">
     <button class="btn-main" onclick="jugar()">OPRIMIR EL BOTÓN</button>
   </div>
@@ -106,6 +115,15 @@ button{
   </div>
 
   <div id="map"></div>
+
+  <div id="stats">
+    <h3>📊 Resultados (en este dispositivo)</h3>
+    👥 Participantes: <b><span id="total">0</span></b><br>
+    💵 Aceptaron: <b><span id="aceptaron">0</span></b><br>
+    ❌ Rechazaron: <b><span id="rechazaron">0</span></b><br>
+    📈 Aceptan el millón: <b><span id="porcentaje">0</span>%</b>
+  </div>
+
 </div>
 
 <audio id="sonido">
@@ -115,19 +133,19 @@ button{
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+// ================= MAPA =================
 const map = L.map('map').setView([20,0],2);
 
-// Mapa base
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   attribution:'© OpenStreetMap'
 }).addTo(map);
 
-// COLORES ALEATORIOS PARA PAÍSES
+// Colores para países
 function colorAleatorio(){
   return `hsl(${Math.random()*360},60%,65%)`;
 }
 
-// Capa de países
+// Capa países
 fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
 .then(res=>res.json())
 .then(data=>{
@@ -135,7 +153,7 @@ fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.g
     style:()=>({
       fillColor:colorAleatorio(),
       fillOpacity:0.6,
-      color:'#333',
+      color:'#222',
       weight:1
     })
   }).addTo(map);
@@ -143,6 +161,7 @@ fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.g
 
 let marcador;
 
+// ================= JUEGO =================
 function jugar(){
   document.getElementById("sonido").play();
   document.getElementById("decision").style.display="none";
@@ -173,27 +192,56 @@ async function generarLugar(){
       document.getElementById("mensaje").innerText=
         `🌊 Caíste en medio del océano… ¿Aceptas el millón?`;
     }
-
-    document.getElementById("decision").style.display="block";
-
   }catch{
     document.getElementById("mensaje").innerText=
       "El destino decidió… ¿Aceptas el millón?";
-    document.getElementById("decision").style.display="block";
   }
+
+  document.getElementById("decision").style.display="block";
+}
+
+// ================= CONTADOR =================
+function iniciarContador(){
+  if(!localStorage.getItem("total")){
+    localStorage.setItem("total",0);
+    localStorage.setItem("aceptaron",0);
+    localStorage.setItem("rechazaron",0);
+  }
+  actualizarStats();
+}
+
+function actualizarStats(){
+  const total=parseInt(localStorage.getItem("total"));
+  const aceptaron=parseInt(localStorage.getItem("aceptaron"));
+  const rechazaron=parseInt(localStorage.getItem("rechazaron"));
+
+  document.getElementById("total").innerText=total;
+  document.getElementById("aceptaron").innerText=aceptaron;
+  document.getElementById("rechazaron").innerText=rechazaron;
+
+  const porcentaje= total>0 ? Math.round((aceptaron/total)*100) : 0;
+  document.getElementById("porcentaje").innerText=porcentaje;
 }
 
 function aceptar(){
+  localStorage.setItem("total",parseInt(localStorage.getItem("total"))+1);
+  localStorage.setItem("aceptaron",parseInt(localStorage.getItem("aceptaron"))+1);
   document.getElementById("mensaje").innerText=
     "💵 Aceptaste el millón. El destino ya no tiene marcha atrás…";
   document.getElementById("decision").style.display="none";
+  actualizarStats();
 }
 
 function rechazar(){
+  localStorage.setItem("total",parseInt(localStorage.getItem("total"))+1);
+  localStorage.setItem("rechazaron",parseInt(localStorage.getItem("rechazaron"))+1);
   document.getElementById("mensaje").innerText=
     "❌ Rechazaste el millón. Elegiste seguridad sobre dinero.";
   document.getElementById("decision").style.display="none";
+  actualizarStats();
 }
+
+window.onload=iniciarContador;
 </script>
 
 </body>
