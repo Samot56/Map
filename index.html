@@ -1,248 +1,188 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Por un millón de dólares</title>
+  <meta charset="UTF-8">
+  <title>Por un millón de dólares</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<style>
-body{
-  margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background: linear-gradient(180deg,#1c1f26,#283048,#3a6073);
-  color:#fff;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
+    }
 
-header{
-  padding:30px 15px;
-  text-align:center;
-}
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
 
-h1{
-  margin:0;
-  font-size:32px;
-}
+    h1 {
+      margin-bottom: 5px;
+    }
 
-.subtitle{
-  margin-top:10px;
-  color:#dcdcdc;
-}
+    p {
+      margin-top: 0;
+      opacity: 0.9;
+    }
 
-.card{
-  max-width:1000px;
-  margin:0 auto 40px;
-  background:rgba(0,0,0,0.35);
-  backdrop-filter:blur(10px);
-  border-radius:25px;
-  padding:25px;
-  box-shadow:0 25px 50px rgba(0,0,0,0.5);
-}
+    .card {
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px 0;
+    }
 
-#map{
-  height:60vh;
-  border-radius:20px;
-  margin-top:20px;
-}
+    button {
+      padding: 14px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      margin: 8px;
+      font-weight: bold;
+    }
 
-.controls{
-  text-align:center;
-  margin:20px 0;
-}
+    .accept {
+      background: #f1c40f;
+      color: black;
+    }
 
-button{
-  padding:15px 40px;
-  font-size:17px;
-  font-weight:bold;
-  border:none;
-  border-radius:30px;
-  cursor:pointer;
-  margin:10px;
-}
+    .reject {
+      background: #e74c3c;
+      color: white;
+    }
 
-.btn-main{
-  background:linear-gradient(135deg,#ffd700,#ffae00);
-  color:#000;
-}
+    .reset {
+      background: #3498db;
+      color: white;
+    }
 
-.btn-yes{
-  background:#00c853;
-  color:#fff;
-}
+    #map {
+      height: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
 
-.btn-no{
-  background:#d50000;
-  color:#fff;
-}
-
-#mensaje{
-  text-align:center;
-  font-size:19px;
-  margin-top:15px;
-  min-height:30px;
-}
-
-#stats{
-  margin-top:25px;
-  padding-top:15px;
-  border-top:1px solid rgba(255,255,255,0.2);
-  text-align:center;
-  font-size:16px;
-}
-</style>
+    .counter {
+      margin-top: 15px;
+      font-size: 15px;
+      opacity: 0.9;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="container">
+    <h1>💵 Por un millón de dólares</h1>
+    <p>Oprimes el botón… el destino decide dónde caes 🌍</p>
 
-<header>
-  <h1>💵 Por un millón de dólares</h1>
-  <div class="subtitle">
-    Oprimes el botón… el destino decide dónde caes 🌍
-  </div>
-</header>
+    <div class="card">
+      <button class="accept" onclick="aceptar()">OPRIMIR EL BOTÓN</button>
+      <button class="reject" onclick="rechazar()">RECHAZAR</button>
+      <button class="reset" onclick="reiniciar()">REINICIAR CONTEO</button>
 
-<div class="card">
+      <p id="mensaje"></p>
 
-  <div class="controls">
-    <button class="btn-main" onclick="jugar()">OPRIMIR EL BOTÓN</button>
-  </div>
+      <div class="counter">
+        <div>Total decisiones: <span id="total">0</span></div>
+        <div>Aceptaron: <span id="aceptaron">0</span></div>
+        <div>Rechazaron: <span id="rechazaron">0</span></div>
+      </div>
+    </div>
 
-  <div id="mensaje"></div>
-
-  <div class="controls" id="decision" style="display:none">
-    <button class="btn-yes" onclick="aceptar()">ACEPTO EL MILLÓN 💵</button>
-    <button class="btn-no" onclick="rechazar()">RECHAZO ❌</button>
-  </div>
-
-  <div id="map"></div>
-
-  <div id="stats">
-    <h3>📊 Resultados (en este dispositivo)</h3>
-    👥 Participantes: <b><span id="total">0</span></b><br>
-    💵 Aceptaron: <b><span id="aceptaron">0</span></b><br>
-    ❌ Rechazaron: <b><span id="rechazaron">0</span></b><br>
-    📈 Aceptan el millón: <b><span id="porcentaje">0</span>%</b>
+    <div class="card">
+      <div id="map"></div>
+    </div>
   </div>
 
-</div>
+  <script>
+    // Recuperar conteo
+    let total = parseInt(localStorage.getItem("total")) || 0;
+    let aceptaron = parseInt(localStorage.getItem("aceptaron")) || 0;
+    let rechazaron = parseInt(localStorage.getItem("rechazaron")) || 0;
 
-<audio id="sonido">
-  <source src="https://www.soundjay.com/buttons/sounds/button-30.mp3">
-</audio>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script>
-// ================= MAPA =================
-const map = L.map('map').setView([20,0],2);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  attribution:'© OpenStreetMap'
-}).addTo(map);
-
-// Colores para países
-function colorAleatorio(){
-  return `hsl(${Math.random()*360},60%,65%)`;
-}
-
-// Capa países
-fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
-.then(res=>res.json())
-.then(data=>{
-  L.geoJSON(data,{
-    style:()=>({
-      fillColor:colorAleatorio(),
-      fillOpacity:0.6,
-      color:'#222',
-      weight:1
-    })
-  }).addTo(map);
-});
-
-let marcador;
-
-// ================= JUEGO =================
-function jugar(){
-  document.getElementById("sonido").play();
-  document.getElementById("decision").style.display="none";
-  document.getElementById("mensaje").innerText="⏳ El destino está decidiendo...";
-
-  setTimeout(generarLugar,1500);
-}
-
-async function generarLugar(){
-  const lat=(Math.random()*180-90).toFixed(5);
-  const lon=(Math.random()*360-180).toFixed(5);
-
-  if(marcador) map.removeLayer(marcador);
-
-  marcador=L.marker([lat,lon]).addTo(map);
-  map.setView([lat,lon],5);
-
-  try{
-    const res=await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-    );
-    const data=await res.json();
-
-    if(data.address && data.address.country){
-      document.getElementById("mensaje").innerText=
-        `🌍 Caíste en ${data.address.country}. ¿Aceptas el millón?`;
-    }else{
-      document.getElementById("mensaje").innerText=
-        `🌊 Caíste en medio del océano… ¿Aceptas el millón?`;
+    // Mostrar conteo
+    function actualizarPantalla() {
+      document.getElementById("total").textContent = total;
+      document.getElementById("aceptaron").textContent = aceptaron;
+      document.getElementById("rechazaron").textContent = rechazaron;
     }
-  }catch{
-    document.getElementById("mensaje").innerText=
-      "El destino decidió… ¿Aceptas el millón?";
-  }
 
-  document.getElementById("decision").style.display="block";
-}
+    actualizarPantalla();
 
-// ================= CONTADOR =================
-function iniciarContador(){
-  if(!localStorage.getItem("total")){
-    localStorage.setItem("total",0);
-    localStorage.setItem("aceptaron",0);
-    localStorage.setItem("rechazaron",0);
-  }
-  actualizarStats();
-}
+    // Mapa
+    const map = L.map("map", {
+      worldCopyJump: true
+    }).setView([0, 0], 2);
 
-function actualizarStats(){
-  const total=parseInt(localStorage.getItem("total"));
-  const aceptaron=parseInt(localStorage.getItem("aceptaron"));
-  const rechazaron=parseInt(localStorage.getItem("rechazaron"));
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
 
-  document.getElementById("total").innerText=total;
-  document.getElementById("aceptaron").innerText=aceptaron;
-  document.getElementById("rechazaron").innerText=rechazaron;
+    let marker;
 
-  const porcentaje= total>0 ? Math.round((aceptaron/total)*100) : 0;
-  document.getElementById("porcentaje").innerText=porcentaje;
-}
+    function generarLugar() {
+      const lat = Math.random() * 180 - 90;
+      const lng = Math.random() * 360 - 180;
 
-function aceptar(){
-  localStorage.setItem("total",parseInt(localStorage.getItem("total"))+1);
-  localStorage.setItem("aceptaron",parseInt(localStorage.getItem("aceptaron"))+1);
-  document.getElementById("mensaje").innerText=
-    "💵 Aceptaste el millón. El destino ya no tiene marcha atrás…";
-  document.getElementById("decision").style.display="none";
-  actualizarStats();
-}
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([lat, lng]).addTo(map);
 
-function rechazar(){
-  localStorage.setItem("total",parseInt(localStorage.getItem("total"))+1);
-  localStorage.setItem("rechazaron",parseInt(localStorage.getItem("rechazaron"))+1);
-  document.getElementById("mensaje").innerText=
-    "❌ Rechazaste el millón. Elegiste seguridad sobre dinero.";
-  document.getElementById("decision").style.display="none";
-  actualizarStats();
-}
+      map.setView([lat, lng], 4);
+    }
 
-window.onload=iniciarContador;
-</script>
+    function aceptar() {
+      total++;
+      aceptaron++;
 
+      localStorage.setItem("total", total);
+      localStorage.setItem("aceptaron", aceptaron);
+
+      document.getElementById("mensaje").textContent =
+        "💰 Aceptaste el millón… no hay vuelta atrás.";
+
+      generarLugar();
+      actualizarPantalla();
+    }
+
+    function rechazar() {
+      total++;
+      rechazaron++;
+
+      localStorage.setItem("total", total);
+      localStorage.setItem("rechazaron", rechazaron);
+
+      document.getElementById("mensaje").textContent =
+        "❌ Rechazaste el millón.";
+
+      actualizarPantalla();
+    }
+
+    function reiniciar() {
+      if (confirm("¿Seguro que deseas reiniciar el conteo?")) {
+        total = 0;
+        aceptaron = 0;
+        rechazaron = 0;
+
+        localStorage.setItem("total", 0);
+        localStorage.setItem("aceptaron", 0);
+        localStorage.setItem("rechazaron", 0);
+
+        document.getElementById("mensaje").textContent = "";
+        actualizarPantalla();
+      }
+    }
+  </script>
 </body>
 </html>
