@@ -1,78 +1,112 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Por un millón de dólares</title>
+<meta charset="UTF-8">
+<title>Por un millón de dólares</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #0f1115;
-      color: #f1f1f1;
-      text-align: center;
-    }
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background: linear-gradient(180deg,#0f2027,#203a43,#2c5364);
+  color:#fff;
+}
 
-    header {
-      padding: 25px 15px;
-      background: #0f1115;
-    }
+header{
+  padding:30px 15px;
+  text-align:center;
+}
 
-    h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 700;
-    }
+h1{
+  margin:0;
+  font-size:30px;
+}
 
-    p {
-      margin-top: 8px;
-      color: #b0b0b0;
-    }
+.subtitle{
+  margin-top:10px;
+  color:#dcdcdc;
+}
 
-    #map {
-      height: 65vh;
-      width: 100%;
-      border-top: 1px solid #222;
-      border-bottom: 1px solid #222;
-    }
+.card{
+  max-width:900px;
+  margin:0 auto;
+  background:rgba(0,0,0,0.35);
+  backdrop-filter:blur(8px);
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.4);
+}
 
-    button {
-      margin: 20px;
-      padding: 16px 40px;
-      font-size: 18px;
-      font-weight: bold;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      background: linear-gradient(135deg, #ffd700, #ffb700);
-      color: #000;
-      box-shadow: 0 8px 20px rgba(255,215,0,0.35);
-    }
+#map{
+  height:60vh;
+  border-radius:15px;
+  margin-top:15px;
+}
 
-    button:hover {
-      transform: scale(1.05);
-    }
+.controls{
+  text-align:center;
+  margin:20px 0;
+}
 
-    #mensaje {
-      font-size: 17px;
-      margin-bottom: 10px;
-      min-height: 30px;
-      color: #e6e6e6;
-    }
-  </style>
+button{
+  padding:15px 35px;
+  font-size:17px;
+  font-weight:bold;
+  border:none;
+  border-radius:30px;
+  cursor:pointer;
+  margin:10px;
+}
+
+.btn-main{
+  background:linear-gradient(135deg,#ffd700,#ffae00);
+  color:#000;
+}
+
+.btn-yes{
+  background:#00c853;
+  color:#fff;
+}
+
+.btn-no{
+  background:#d50000;
+  color:#fff;
+}
+
+#mensaje{
+  text-align:center;
+  font-size:18px;
+  margin-top:15px;
+  min-height:30px;
+}
+</style>
 </head>
+
 <body>
 
 <header>
   <h1>💵 Por un millón de dólares</h1>
-  <p>Oprimes el botón… el destino decide dónde caes 🌍</p>
+  <div class="subtitle">
+    Oprimes el botón… el destino decide dónde caes 🌍
+  </div>
 </header>
 
-<button onclick="jugar()">OPRIMIR EL BOTÓN</button>
-<div id="mensaje"></div>
-<div id="map"></div>
+<div class="card">
+  <div class="controls">
+    <button class="btn-main" onclick="jugar()">OPRIMIR EL BOTÓN</button>
+  </div>
+
+  <div id="mensaje"></div>
+
+  <div class="controls" id="decision" style="display:none">
+    <button class="btn-yes" onclick="aceptar()">ACEPTO EL MILLÓN 💵</button>
+    <button class="btn-no" onclick="rechazar()">RECHAZO ❌</button>
+  </div>
+
+  <div id="map"></div>
+</div>
 
 <audio id="sonido">
   <source src="https://www.soundjay.com/buttons/sounds/button-30.mp3">
@@ -81,57 +115,85 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  const map = L.map('map', { zoomControl: false }).setView([20, 0], 2);
+const map = L.map('map').setView([20,0],2);
 
-  // Mapa base limpio
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap & CartoDB'
+// Mapa base
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© OpenStreetMap'
+}).addTo(map);
+
+// COLORES ALEATORIOS PARA PAÍSES
+function colorAleatorio(){
+  return `hsl(${Math.random()*360},60%,65%)`;
+}
+
+// Capa de países
+fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+.then(res=>res.json())
+.then(data=>{
+  L.geoJSON(data,{
+    style:()=>({
+      fillColor:colorAleatorio(),
+      fillOpacity:0.6,
+      color:'#333',
+      weight:1
+    })
   }).addTo(map);
+});
 
-  let marcador;
+let marcador;
 
-  function jugar() {
-    document.getElementById("sonido").play();
-    document.getElementById("mensaje").innerText = "⏳ El destino está decidiendo...";
+function jugar(){
+  document.getElementById("sonido").play();
+  document.getElementById("decision").style.display="none";
+  document.getElementById("mensaje").innerText="⏳ El destino está decidiendo...";
 
-    setTimeout(generarLugar, 1300);
-  }
+  setTimeout(generarLugar,1500);
+}
 
-  async function generarLugar() {
-    const lat = (Math.random() * 180 - 90).toFixed(5);
-    const lon = (Math.random() * 360 - 180).toFixed(5);
+async function generarLugar(){
+  const lat=(Math.random()*180-90).toFixed(5);
+  const lon=(Math.random()*360-180).toFixed(5);
 
-    if (marcador) map.removeLayer(marcador);
+  if(marcador) map.removeLayer(marcador);
 
-    marcador = L.marker([lat, lon]).addTo(map);
-    map.setView([lat, lon], 5);
+  marcador=L.marker([lat,lon]).addTo(map);
+  map.setView([lat,lon],5);
 
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-      );
-      const data = await res.json();
+  try{
+    const res=await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+    );
+    const data=await res.json();
 
-      if (data.address && data.address.country) {
-        document.getElementById("mensaje").innerText =
-          `🌍 Caíste en ${data.address.country}. ¿Aceptarías el millón? 💵`;
-
-        marcador.bindPopup(
-          `<b>${data.address.country}</b><br>¿Aceptarías el millón?`
-        ).openPopup();
-      } else {
-        document.getElementById("mensaje").innerText =
-          "🌊 Caíste en medio del océano… ¿aceptas el millón? 💵";
-
-        marcador.bindPopup(
-          `<b>Océano abierto 🌊</b><br>¿Aceptarías el millón?`
-        ).openPopup();
-      }
-    } catch {
-      document.getElementById("mensaje").innerText =
-        "❓ Lugar desconocido… pero el destino ya decidió.";
+    if(data.address && data.address.country){
+      document.getElementById("mensaje").innerText=
+        `🌍 Caíste en ${data.address.country}. ¿Aceptas el millón?`;
+    }else{
+      document.getElementById("mensaje").innerText=
+        `🌊 Caíste en medio del océano… ¿Aceptas el millón?`;
     }
+
+    document.getElementById("decision").style.display="block";
+
+  }catch{
+    document.getElementById("mensaje").innerText=
+      "El destino decidió… ¿Aceptas el millón?";
+    document.getElementById("decision").style.display="block";
   }
+}
+
+function aceptar(){
+  document.getElementById("mensaje").innerText=
+    "💵 Aceptaste el millón. El destino ya no tiene marcha atrás…";
+  document.getElementById("decision").style.display="none";
+}
+
+function rechazar(){
+  document.getElementById("mensaje").innerText=
+    "❌ Rechazaste el millón. Elegiste seguridad sobre dinero.";
+  document.getElementById("decision").style.display="none";
+}
 </script>
 
 </body>
