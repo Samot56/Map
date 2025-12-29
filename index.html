@@ -109,7 +109,6 @@ button{
 
   <div class="controls">
     <button class="btn-main" onclick="jugar()">POR EL MILLON</button>
-    <button class="reset" onclick="reiniciar()">REINICIAR CONTEO</button>
   </div>
 
   <div id="mensaje"></div>
@@ -246,23 +245,10 @@ function rechazar(){
   actualizarStats();
 }
 
-function reiniciar() {
-      if (confirm("¿Seguro que deseas reiniciar el conteo?")) {
-        total = 0;
-        aceptaron = 0;
-        rechazaron = 0;
-
-        localStorage.setItem("total", 0);
-        localStorage.setItem("aceptaron", 0);
-        localStorage.setItem("rechazaron", 0);
-
-        document.getElementById("mensaje").textContent = "";
-        actualizarPantalla();
-      }
-
 window.onload=iniciarContador;
 </script>
 
 </body>
 </html>
+
 
