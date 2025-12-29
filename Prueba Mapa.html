@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Por un millón de dólares</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f1115;
+      color: #f1f1f1;
+      text-align: center;
+    }
+
+    header {
+      padding: 25px 15px;
+      background: #0f1115;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    p {
+      margin-top: 8px;
+      color: #b0b0b0;
+    }
+
+    #map {
+      height: 65vh;
+      width: 100%;
+      border-top: 1px solid #222;
+      border-bottom: 1px solid #222;
+    }
+
+    button {
+      margin: 20px;
+      padding: 16px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffd700, #ffb700);
+      color: #000;
+      box-shadow: 0 8px 20px rgba(255,215,0,0.35);
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    #mensaje {
+      font-size: 17px;
+      margin-bottom: 10px;
+      min-height: 30px;
+      color: #e6e6e6;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>💵 Por un millón de dólares</h1>
+  <p>Oprimes el botón… el destino decide dónde caes 🌍</p>
+</header>
+
+<button onclick="jugar()">OPRIMIR EL BOTÓN</button>
+<div id="mensaje"></div>
+<div id="map"></div>
+
+<audio id="sonido">
+  <source src="https://www.soundjay.com/buttons/sounds/button-30.mp3">
+</audio>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  const map = L.map('map', { zoomControl: false }).setView([20, 0], 2);
+
+  // Mapa base limpio
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap & CartoDB'
+  }).addTo(map);
+
+  let marcador;
+
+  function jugar() {
+    document.getElementById("sonido").play();
+    document.getElementById("mensaje").innerText = "⏳ El destino está decidiendo...";
+
+    setTimeout(generarLugar, 1300);
+  }
+
+  async function generarLugar() {
+    const lat = (Math.random() * 180 - 90).toFixed(5);
+    const lon = (Math.random() * 360 - 180).toFixed(5);
+
+    if (marcador) map.removeLayer(marcador);
+
+    marcador = L.marker([lat, lon]).addTo(map);
+    map.setView([lat, lon], 5);
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+      );
+      const data = await res.json();
+
+      if (data.address && data.address.country) {
+        document.getElementById("mensaje").innerText =
+          `🌍 Caíste en ${data.address.country}. ¿Aceptarías el millón? 💵`;
+
+        marcador.bindPopup(
+          `<b>${data.address.country}</b><br>¿Aceptarías el millón?`
+        ).openPopup();
+      } else {
+        document.getElementById("mensaje").innerText =
+          "🌊 Caíste en medio del océano… ¿aceptas el millón? 💵";
+
+        marcador.bindPopup(
+          `<b>Océano abierto 🌊</b><br>¿Aceptarías el millón?`
+        ).openPopup();
+      }
+    } catch {
+      document.getElementById("mensaje").innerText =
+        "❓ Lugar desconocido… pero el destino ya decidió.";
+    }
+  }
+</script>
+
+</body>
+</html>
